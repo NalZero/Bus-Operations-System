@@ -22,7 +22,7 @@ const AssignRouteModal = ({
   onAssign, 
 }: { 
   onClose: () => void;
-  onAssign: (route: any) => void; 
+  onAssign: (route: Route) => void; 
  }) => {
 
   // Sample data
