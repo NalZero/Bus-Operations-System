@@ -16,6 +16,7 @@ const SearchBar = ({placeholder='Search',className='', value = '', onChange} :Se
       {/* Search Bar */}
       <input
         type="text"
+        value={value} // ✅ this line makes `value` used
         className="w-full pr-10 px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         placeholder={placeholder}
         onChange={onChange}
