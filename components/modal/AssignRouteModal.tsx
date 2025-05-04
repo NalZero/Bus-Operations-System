@@ -1,10 +1,9 @@
 'use client';
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import Image from 'next/image';
 import Button from "@/components/ui/Button";
 import SearchBar from "@/components/ui/SearchBar";
 import DropdownButton from '../ui/DropdownButton';
-
 
 interface Route {
   routeID: string;
@@ -25,15 +24,22 @@ const AssignRouteModal = ({
   onAssign: (route: Route) => void; 
  }) => {
 
-  // Sample data
-  const routes = [  
-    { routeID: 'ROUTE123' , routeName: 'Sapang Palay - PITX', isActive: true, startPoint: 'Sapang Palay', endPoint: 'PITX', roundTrip: true,  noOfBus: 5 , image: null},
-    { routeID: 'ROUTE345' ,routeName: 'Sapang Palay - Divisoria',isActive: true, startPoint: 'Sapang Palay', endPoint: 'Divisoria', roundTrip: false, noOfBus: 12, image: null},
-    { routeID: 'ROUTE567' ,routeName: 'Fairview - Litex', isActive: true, startPoint: 'Fairview, Quezon City', endPoint: 'Litex Commonwealth', roundTrip: true, noOfBus: 20, image: null},
+  useEffect(() => {
+    const fetchRoutes = async () => {
+      try {
+        const res = await fetch('/api/routes');
+        const data = await res.json();
+        setRoutes(data); 
+        setFilteredRoutes(data);
+      } catch (err) {
+        console.error("Failed to fetch routes:", err);
+      }
+    };
   
-  ];
-
+    fetchRoutes();
+  }, []);
   
+  const [routes, setRoutes] = useState<Route[]>([]);
   const [filteredRoutes, setFilteredRoutes] = useState(routes); // use state for filter function
   const [searchTerm, setSearchTerm] = useState(''); // use state for search function
 
