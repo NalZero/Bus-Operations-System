@@ -1,25 +1,17 @@
-import { PrismaClient } from '../app/generated/prisma';
+import { PrismaClient } from '../app/generated/prisma'
 
-const prisma = new PrismaClient();
-
-// Generic model interface with a typed findFirst method
-interface ModelWithFindFirst {
-  findFirst<T extends object>(args: {
-    orderBy: Record<string, 'asc' | 'desc'>;
-    select: Record<string, boolean>;
-  }): Promise<T | null>;
-}
+const prisma = new PrismaClient()
 
 // Mapping of model names to actual Prisma model instances
-const modelMap: Record<string, ModelWithFindFirst> = {
+const modelMap = {
   quota_Policy: prisma.quota_Policy,
   stop: prisma.stop,
   route: prisma.route,
   routeStop: prisma.routeStop,
   busAssignment: prisma.busAssignment,
-};
+} as const
 
-type PrismaModelName = keyof typeof modelMap;
+type PrismaModelName = keyof typeof modelMap
 
 /**
  * Generate a formatted ID with a prefix and padded number based on the last existing ID in a given Prisma model.
@@ -36,25 +28,26 @@ export async function generateFormattedID(
   prefix: string,
   padding: number = 4
 ): Promise<string> {
-  const model = modelMap[modelName];
+  const model = modelMap[modelName]
 
-  const lastRecord = await model.findFirst<{ [key: string]: string | null }>({
+  // Let TypeScript infer the result type; we expect the field to be a string
+  const lastRecord = await model.findFirst({
     orderBy: {
       [field]: 'desc',
     },
     select: {
       [field]: true,
     },
-  });
+  }) as Record<string, string> | null
 
-  let nextNumber = 1;
+  let nextNumber = 1
 
   if (lastRecord && typeof lastRecord[field] === 'string') {
-    const match = lastRecord[field]!.match(/\d+$/);
+    const match = lastRecord[field]!.match(/\d+$/)
     if (match) {
-      nextNumber = parseInt(match[0], 10) + 1;
+      nextNumber = parseInt(match[0], 10) + 1
     }
   }
 
-  return `${prefix}-${nextNumber.toString().padStart(padding, '0')}`;
+  return `${prefix}-${nextNumber.toString().padStart(padding, '0')}`
 }
