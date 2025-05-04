@@ -1,59 +1,75 @@
-import { PrismaClient } from '../app/generated/prisma'
+import { PrismaClient } from '../app/generated/prisma';
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
-// Mapping of model names to actual Prisma model instances
-const modelMap = {
-  quota_Policy: prisma.quota_Policy,
-  stop: prisma.stop,
-  route: prisma.route,
-  routeStop: prisma.routeStop,
-  busAssignment: prisma.busAssignment,
-  busRouteAssignment: prisma.busRouteAssignment,
-}
-
-// Valid keys for the above map
-type PrismaModelName = keyof typeof modelMap
-
-// Define expected structure of findFirst's return (field: string)
-type RecordWithField = {
-  [key: string]: string
-}
+type ModelName = 'route' | 'stop' | 'routeStop' | 'quota_Policy' | 'busAssignment';
 
 /**
- * Generate a formatted ID with a prefix and padded number based on the last existing ID in a given Prisma model.
- *
- * @param modelName - The name of the Prisma model to query
- * @param field - The field in the model to sort by (e.g., 'routeId')
- * @param prefix - The prefix to include in the generated ID (e.g., 'ROUTE')
- * @param padding - The number of digits to pad the ID number (default: 4)
- * @returns A formatted ID string like 'ROUTE-0001'
+ * Generate a formatted ID with a prefix and padded number based on the last existing ID.
  */
 export async function generateFormattedID(
-  modelName: PrismaModelName,
+  modelName: ModelName,
   field: string,
   prefix: string,
-  padding: number = 4
+  padding = 4
 ): Promise<string> {
-  const model = modelMap[modelName]
+  // Holder for the last record response
+  let lastIdValue: string | undefined;
 
-  const lastRecord = await model.findFirst({
-    orderBy: {
-      [field]: 'desc',
-    },
-    select: {
-      [field]: true,
-    },
-  }) as RecordWithField | null
+  switch (modelName) {
+    case 'route': {
+      const rec = await prisma.route.findFirst({
+        orderBy: { [field]: 'desc' },
+        select: { [field]: true },
+      });
+      lastIdValue = rec?.[field] as string | undefined;
+      break;
+    }
+    case 'stop': {
+      const rec = await prisma.stop.findFirst({
+        orderBy: { [field]: 'desc' },
+        select: { [field]: true },
+      });
+      lastIdValue = rec?.[field] as string | undefined;
+      break;
+    }
+    case 'routeStop': {
+      const rec = await prisma.routeStop.findFirst({
+        orderBy: { [field]: 'desc' },
+        select: { [field]: true },
+      });
+      lastIdValue = rec?.[field] as string | undefined;
+      break;
+    }
+    case 'quota_Policy': {
+      const rec = await prisma.quota_Policy.findFirst({
+        orderBy: { [field]: 'desc' },
+        select: { [field]: true },
+      });
+      lastIdValue = rec?.[field] as string | undefined;
+      break;
+    }
+    case 'busAssignment': {
+      const rec = await prisma.busAssignment.findFirst({
+        orderBy: { [field]: 'desc' },
+        select: { [field]: true },
+      });
+      lastIdValue = rec?.[field] as string | undefined;
+      break;
+    }
+    default:
+      throw new Error(`Unsupported model: ${modelName}`);
+  }
 
-  let nextNumber = 1
-
-  if (lastRecord && typeof lastRecord[field] === 'string') {
-    const match = lastRecord[field].match(/\d+$/)
+  // Compute next number
+  let nextNumber = 1;
+  if (lastIdValue) {
+    const match = lastIdValue.match(/\d+$/);
     if (match) {
-      nextNumber = parseInt(match[0], 10) + 1
+      nextNumber = parseInt(match[0], 10) + 1;
     }
   }
 
-  return `${prefix}-${nextNumber.toString().padStart(padding, '0')}`
+  // Format and return new ID
+  return `${prefix}-${nextNumber.toString().padStart(padding, '0')}`;
 }
