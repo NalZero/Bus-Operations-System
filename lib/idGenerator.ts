@@ -2,10 +2,10 @@ import { PrismaClient } from '../app/generated/prisma';
 
 const prisma = new PrismaClient();
 
-// Union of model names we support
+// Define the allowed model names
 type ModelName = 'route' | 'stop' | 'routeStop' | 'quota_Policy' | 'busAssignment';
 
-// Type mapping each model name to its Prisma delegate and key field
+// Map each model name to its corresponding delegate and key field
 const modelConfig = {
   route: { delegate: prisma.route, keyField: 'routeId' },
   stop: { delegate: prisma.stop, keyField: 'stopId' },
@@ -14,27 +14,26 @@ const modelConfig = {
   busAssignment: { delegate: prisma.busAssignment, keyField: 'assignmentId' },
 } as const;
 
-// Infer delegate type
-type ModelDelegate<T extends ModelName> = typeof modelConfig[T]['delegate'];
+// Type-safe delegate inference
+type ModelConfig = typeof modelConfig;
+type DelegateType<T extends ModelName> = ModelConfig[T]['delegate'];
+type KeyField<T extends ModelName> = ModelConfig[T]['keyField'];
 
 /**
- * Generates a custom-formatted ID like "ROUTE-0001" by querying the highest existing value.
- *
- * @param modelName - The Prisma model name
- * @param prefix - The prefix string (e.g., "ROUTE")
- * @param padding - Number of digits to pad (default is 4)
- * @returns The next generated ID string
+ * Generate a formatted ID like "STOP-0001" for a given model.
+ * @param modelName - The name of the model
+ * @param prefix - The prefix to use in the ID
+ * @param padding - Number of digits to pad (default 4)
+ * @returns A new ID string
  */
 export async function generateFormattedID<T extends ModelName>(
   modelName: T,
   prefix: string,
   padding: number = 4
 ): Promise<string> {
-  const { delegate, keyField } = modelConfig[modelName] as {
-    delegate: { findFirst: Function },
-    keyField: string
-  };
+  const { delegate, keyField } = modelConfig[modelName];
 
+  // Use generic typing to ensure delegate supports `findFirst`
   const lastRecord = await delegate.findFirst({
     orderBy: {
       [keyField]: 'desc',
@@ -42,7 +41,7 @@ export async function generateFormattedID<T extends ModelName>(
     select: {
       [keyField]: true,
     },
-  });
+  } as any); // We use `as any` here **only once** due to lack of unified typing across models
 
   let nextNumber = 1;
 
