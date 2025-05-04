@@ -125,8 +125,8 @@ function handleRouteAssignment(route: Route) {
   }
 
   // Now the route object can be safely passed to setSelectedRoute
-  setSelectedRoute(route); // store or use it as needed
-  setShowAssignRouteModal(false); // close modal
+  //setSelectedRoute(route); // store or use it as needed
+  //setShowAssignRouteModal(false); // close modal
 }
 
 // Example usage:
