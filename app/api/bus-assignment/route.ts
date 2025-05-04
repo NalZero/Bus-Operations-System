@@ -4,19 +4,19 @@ import prisma from '@/client'; // Importing the Prisma client instance to intera
 export async function GET() {
   try {
     const assignments = await prisma.regularBusAssignment.findMany({
-      include: {
-        BusAssignment: {
-          select: {
-            BusID: true,
-          },
-        },
-        quotaPolicy: {
-          include: {
-            Fixed: true,
-            Percentage: true,
-          },
-        },
-      },
+        include: {
+            BusAssignment: {
+                select: {
+                    BusID: true,
+                }
+            },
+            quotaPolicy: {
+              include: {
+                Fixed: true,
+                Percentage: true,
+              },
+            },
+        }
     });
     console.log('Assignments from database:', assignments); // Debugging
 
@@ -26,6 +26,7 @@ export async function GET() {
     return NextResponse.json({ error: 'Failed to fetch assignments' }, { status: 500 });
   }
 }
+
 
 export async function POST(request: Request) {
   try {
@@ -110,29 +111,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Failed to create BusAssignment' }, { status: 500 });
   }
 }
-
-// Code where route is passed to setSelectedRoute function
-interface Route {
-  route_id: string; // Ensure route_id is required
-  routeName: string;
-}
-
-function handleRouteAssignment(route: Route) {
-  // Ensuring that route contains the required property `route_id`
-  if (!route.route_id) {
-    console.error("Route is missing required 'route_id'");
-    return;
-  }
-
-  // Now the route object can be safely passed to setSelectedRoute
-  //setSelectedRoute(route); // store or use it as needed
-  //setShowAssignRouteModal(false); // close modal
-}
-
-// Example usage:
-const route = {
-  route_id: "route-001", // Ensure this property exists
-  routeName: "Route 1",
-};
-
-handleRouteAssignment(route);
