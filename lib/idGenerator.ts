@@ -2,52 +2,52 @@ import { PrismaClient } from '../app/generated/prisma';
 
 const prisma = new PrismaClient();
 
-// Define model names as a union type
-type PrismaModelName = 'quota_Policy' | 'stop' | 'route' | 'routeStop' | 'busAssignment';
+// Union of model names we support
+type ModelName = 'route' | 'stop' | 'routeStop' | 'quota_Policy' | 'busAssignment';
 
-// Typed map of model names to Prisma client delegates
-const modelMap = {
-  quota_Policy: prisma.quota_Policy,
-  stop: prisma.stop,
-  route: prisma.route,
-  routeStop: prisma.routeStop,
-  busAssignment: prisma.busAssignment,
+// Type mapping each model name to its Prisma delegate and key field
+const modelConfig = {
+  route: { delegate: prisma.route, keyField: 'routeId' },
+  stop: { delegate: prisma.stop, keyField: 'stopId' },
+  routeStop: { delegate: prisma.routeStop, keyField: 'routeStopId' },
+  quota_Policy: { delegate: prisma.quota_Policy, keyField: 'quotaPolicyId' },
+  busAssignment: { delegate: prisma.busAssignment, keyField: 'assignmentId' },
 } as const;
 
-// Type helper to extract the correct model delegate
-type ModelMap = typeof modelMap;
-type ModelDelegate<T extends keyof ModelMap> = ModelMap[T];
+// Infer delegate type
+type ModelDelegate<T extends ModelName> = typeof modelConfig[T]['delegate'];
 
 /**
- * Generate a formatted ID with a prefix and padded number based on the last existing ID in a given Prisma model.
+ * Generates a custom-formatted ID like "ROUTE-0001" by querying the highest existing value.
  *
- * @param modelName - The name of the Prisma model to query
- * @param field - The field in the model to sort by (e.g., 'routeId')
- * @param prefix - The prefix to include in the generated ID (e.g., 'ROUTE')
- * @param padding - The number of digits to pad the ID number (default: 4)
- * @returns A formatted ID string like 'ROUTE-0001'
+ * @param modelName - The Prisma model name
+ * @param prefix - The prefix string (e.g., "ROUTE")
+ * @param padding - Number of digits to pad (default is 4)
+ * @returns The next generated ID string
  */
-export async function generateFormattedID<T extends PrismaModelName>(
+export async function generateFormattedID<T extends ModelName>(
   modelName: T,
-  field: string,
   prefix: string,
   padding: number = 4
 ): Promise<string> {
-  const model: ModelDelegate<T> = modelMap[modelName];
+  const { delegate, keyField } = modelConfig[modelName] as {
+    delegate: { findFirst: Function },
+    keyField: string
+  };
 
-  const lastRecord = await model.findFirst({
+  const lastRecord = await delegate.findFirst({
     orderBy: {
-      [field]: 'desc',
+      [keyField]: 'desc',
     },
     select: {
-      [field]: true,
+      [keyField]: true,
     },
   });
 
   let nextNumber = 1;
 
-  if (lastRecord && typeof lastRecord[field as keyof typeof lastRecord] === 'string') {
-    const match = (lastRecord[field as keyof typeof lastRecord] as string).match(/\d+$/);
+  if (lastRecord && typeof lastRecord[keyField] === 'string') {
+    const match = lastRecord[keyField].match(/\d+$/);
     if (match) {
       nextNumber = parseInt(match[0], 10) + 1;
     }
