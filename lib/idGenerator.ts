@@ -1,17 +1,22 @@
-import { PrismaClient } from '../app/generated/prisma'
+import { PrismaClient } from '../app/generated/prisma';
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
-// Mapping of model names to actual Prisma model instances
+// Define model names as a union type
+type PrismaModelName = 'quota_Policy' | 'stop' | 'route' | 'routeStop' | 'busAssignment';
+
+// Typed map of model names to Prisma client delegates
 const modelMap = {
   quota_Policy: prisma.quota_Policy,
   stop: prisma.stop,
   route: prisma.route,
   routeStop: prisma.routeStop,
   busAssignment: prisma.busAssignment,
-} as const
+} as const;
 
-type PrismaModelName = keyof typeof modelMap
+// Type helper to extract the correct model delegate
+type ModelMap = typeof modelMap;
+type ModelDelegate<T extends keyof ModelMap> = ModelMap[T];
 
 /**
  * Generate a formatted ID with a prefix and padded number based on the last existing ID in a given Prisma model.
@@ -22,15 +27,14 @@ type PrismaModelName = keyof typeof modelMap
  * @param padding - The number of digits to pad the ID number (default: 4)
  * @returns A formatted ID string like 'ROUTE-0001'
  */
-export async function generateFormattedID(
-  modelName: PrismaModelName,
+export async function generateFormattedID<T extends PrismaModelName>(
+  modelName: T,
   field: string,
   prefix: string,
   padding: number = 4
 ): Promise<string> {
-  const model = modelMap[modelName]
+  const model: ModelDelegate<T> = modelMap[modelName];
 
-  // Let TypeScript infer the result type; we expect the field to be a string
   const lastRecord = await model.findFirst({
     orderBy: {
       [field]: 'desc',
@@ -38,16 +42,16 @@ export async function generateFormattedID(
     select: {
       [field]: true,
     },
-  }) as Record<string, string> | null
+  });
 
-  let nextNumber = 1
+  let nextNumber = 1;
 
-  if (lastRecord && typeof lastRecord[field] === 'string') {
-    const match = lastRecord[field]!.match(/\d+$/)
+  if (lastRecord && typeof lastRecord[field as keyof typeof lastRecord] === 'string') {
+    const match = (lastRecord[field as keyof typeof lastRecord] as string).match(/\d+$/);
     if (match) {
-      nextNumber = parseInt(match[0], 10) + 1
+      nextNumber = parseInt(match[0], 10) + 1;
     }
   }
 
-  return `${prefix}-${nextNumber.toString().padStart(padding, '0')}`
+  return `${prefix}-${nextNumber.toString().padStart(padding, '0')}`;
 }
