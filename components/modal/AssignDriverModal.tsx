@@ -21,7 +21,7 @@ const AssignDriverModal = ({
   onAssign, 
 }: { 
   onClose: () => void;
-  onAssign: (driver: any) => void; 
+  onAssign: (driver: Driver) => void; 
 }
 
 ) => {
