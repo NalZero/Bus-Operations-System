@@ -1,12 +1,4 @@
 import { PrismaClient } from '../app/generated/prisma';
-import {
-  Prisma,
-  Route,
-  Stop,
-  RouteStop,
-  Quota_Policy,
-  BusAssignment,
-} from '../app/generated/prisma';
 
 const prisma = new PrismaClient();
 
@@ -28,7 +20,7 @@ export async function generateFormattedID<T extends ModelName>(
 ): Promise<string> {
   const config = modelConfig[modelName];
 
-  // Narrow delegate to concrete type
+  // Narrow delegate to a callable with proper typing
   const delegate = config.delegate as {
     findFirst: (args: {
       orderBy: Record<string, 'desc'>;
