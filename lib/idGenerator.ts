@@ -2,15 +2,15 @@ import { PrismaClient } from '../app/generated/prisma';
 
 const prisma = new PrismaClient();
 
-// Define the types for model instances with the findFirst method
+// Generic model interface with a typed findFirst method
 interface ModelWithFindFirst {
-  findFirst(args: {
+  findFirst<T extends object>(args: {
     orderBy: Record<string, 'asc' | 'desc'>;
     select: Record<string, boolean>;
-  }): Promise<any | null>; // Changed to 'any' to support more complex return types
+  }): Promise<T | null>;
 }
 
-// Mapping of model names to actual Prisma model instances, with the correct types
+// Mapping of model names to actual Prisma model instances
 const modelMap: Record<string, ModelWithFindFirst> = {
   quota_Policy: prisma.quota_Policy,
   stop: prisma.stop,
@@ -19,13 +19,7 @@ const modelMap: Record<string, ModelWithFindFirst> = {
   busAssignment: prisma.busAssignment,
 };
 
-// Define the valid keys for the above map
 type PrismaModelName = keyof typeof modelMap;
-
-// Define the expected structure of findFirst's return for record fields
-type RecordWithField = {
-  [key: string]: string;
-};
 
 /**
  * Generate a formatted ID with a prefix and padded number based on the last existing ID in a given Prisma model.
@@ -42,29 +36,25 @@ export async function generateFormattedID(
   prefix: string,
   padding: number = 4
 ): Promise<string> {
-  // Safely access the model from the map
   const model = modelMap[modelName];
 
-  // Use findFirst to get the last record and determine the next ID number
-  const lastRecord = await model.findFirst({
+  const lastRecord = await model.findFirst<{ [key: string]: string | null }>({
     orderBy: {
-      [field]: 'desc', // Order by the field in descending order
+      [field]: 'desc',
     },
     select: {
-      [field]: true, // Only select the field we're interested in
+      [field]: true,
     },
   });
 
   let nextNumber = 1;
 
-  // If a last record exists, extract the next number
   if (lastRecord && typeof lastRecord[field] === 'string') {
-    const match = lastRecord[field].match(/\d+$/); // Match the digits at the end of the ID
+    const match = lastRecord[field]!.match(/\d+$/);
     if (match) {
-      nextNumber = parseInt(match[0], 10) + 1; // Increment the number
+      nextNumber = parseInt(match[0], 10) + 1;
     }
   }
 
-  // Return the formatted ID with prefix and padded number
   return `${prefix}-${nextNumber.toString().padStart(padding, '0')}`;
 }
