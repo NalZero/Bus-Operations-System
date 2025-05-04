@@ -15,7 +15,12 @@ interface Conductor {
   image: string | null;
 }
 
-const AssignConductorModal = ({ 
+interface AssignConductorModalProps {
+  onClose: () => void;
+  onAssign: (conductor: Conductor) => void;
+}
+
+const AssignConductorModal: React.FC<AssignConductorModalProps> = ({ 
   onClose,
   onAssign, 
 }: { 
