@@ -14,12 +14,15 @@ interface Bus {
   image: string | null;
 }
 
-const AssignBusModal = ({ 
-  onClose,
-  onAssign, 
-}: { 
+// ← ADDED: Props interface replacing inline `any`
+interface AssignBusModalProps {
   onClose: () => void;
-  onAssign: (bus: any) => void; 
+  onAssign: (bus: Bus) => void;      // ← CHANGED: bus typed as `Bus`
+}
+
+const AssignBusModal: React.FC<AssignBusModalProps> = ({
+  onClose,
+  onAssign,
 }) => {
 
   const [buses, setBuses] = useState<Bus[]>([]);
