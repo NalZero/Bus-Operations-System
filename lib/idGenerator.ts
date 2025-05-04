@@ -7,7 +7,7 @@ interface ModelWithFindFirst {
   findFirst(args: {
     orderBy: Record<string, 'asc' | 'desc'>;
     select: Record<string, boolean>;
-  }): Promise<Record<string, string> | null>;
+  }): Promise<any | null>; // Changed to 'any' to support more complex return types
 }
 
 // Mapping of model names to actual Prisma model instances, with the correct types
@@ -22,7 +22,7 @@ const modelMap: Record<string, ModelWithFindFirst> = {
 // Define the valid keys for the above map
 type PrismaModelName = keyof typeof modelMap;
 
-// Define the expected structure of findFirst's return (e.g., 'field: string')
+// Define the expected structure of findFirst's return for record fields
 type RecordWithField = {
   [key: string]: string;
 };
@@ -53,7 +53,7 @@ export async function generateFormattedID(
     select: {
       [field]: true, // Only select the field we're interested in
     },
-  }) as RecordWithField | null;
+  });
 
   let nextNumber = 1;
 
