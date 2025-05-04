@@ -13,7 +13,7 @@ const Topbar = () => {
 
   useEffect(() => {
     const topLinks = document.querySelectorAll('.top-link');
-    const underline = underlineRef.current;
+    //const underline = underlineRef.current;
 
     const handleClick = (e: Event) => {
       e.preventDefault();
