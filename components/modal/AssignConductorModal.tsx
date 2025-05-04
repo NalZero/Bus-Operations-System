@@ -23,12 +23,7 @@ interface AssignConductorModalProps {
 const AssignConductorModal: React.FC<AssignConductorModalProps> = ({ 
   onClose,
   onAssign, 
-}: { 
-  onClose: () => void;
-  onAssign: (conductor: Conductor) => void; 
-}
-  
-) => {
+}) => {
 
   const [conductors, setConductors] = useState<Conductor[]>([]);
 
