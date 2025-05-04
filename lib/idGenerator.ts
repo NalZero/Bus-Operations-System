@@ -9,7 +9,6 @@ const modelMap = {
   route: prisma.route,
   routeStop: prisma.routeStop,
   busAssignment: prisma.busAssignment,
-  busRouteAssignment: prisma.busRouteAssignment,
 }
 
 // Valid keys for the above map
