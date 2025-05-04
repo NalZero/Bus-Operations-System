@@ -27,7 +27,7 @@ const BusRouteAssignmentPage: React.FC = () => {
   const [busRouteAssignments, setAssignments] = useState<BusRouteAssignment[]>([]);
   const [selectedBusAssignmentID, setSelectedBusAssignmentID] = useState<number | null>(null);
   const [selectedRouteID, setSelectedRouteID] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState<string>('');
+  //const [searchQuery, setSearchQuery] = useState<string>('');
 
   useEffect(() => {
     const fetchAssignments = async () => {
