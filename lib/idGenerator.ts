@@ -1,11 +1,18 @@
 import { PrismaClient } from '../app/generated/prisma';
+import {
+  Prisma,
+  Route,
+  Stop,
+  RouteStop,
+  Quota_Policy,
+  BusAssignment,
+} from '../app/generated/prisma';
 
 const prisma = new PrismaClient();
 
-// Define allowed model names
+// Define model names
 type ModelName = 'route' | 'stop' | 'routeStop' | 'quota_Policy' | 'busAssignment';
 
-// Define mapping for each model's delegate and ID field name
 const modelConfig = {
   route: { delegate: prisma.route, keyField: 'routeId' },
   stop: { delegate: prisma.stop, keyField: 'stopId' },
@@ -14,21 +21,23 @@ const modelConfig = {
   busAssignment: { delegate: prisma.busAssignment, keyField: 'assignmentId' },
 } as const;
 
-/**
- * Generates a formatted ID like "STOP-0001" for a given model.
- * @param modelName - The name of the model
- * @param prefix - The prefix to use in the ID
- * @param padding - Number of digits to pad (default 4)
- * @returns A new ID string
- */
 export async function generateFormattedID<T extends ModelName>(
   modelName: T,
   prefix: string,
   padding = 4
 ): Promise<string> {
-  const { delegate, keyField } = modelConfig[modelName];
+  const config = modelConfig[modelName];
 
-  // Use dynamic key selection while keeping strict typing
+  // Narrow delegate to concrete type
+  const delegate = config.delegate as {
+    findFirst: (args: {
+      orderBy: Record<string, 'desc'>;
+      select: Record<string, true>;
+    }) => Promise<Record<string, string> | null>;
+  };
+
+  const keyField = config.keyField;
+
   const lastRecord = await delegate.findFirst({
     orderBy: {
       [keyField]: 'desc',
@@ -36,12 +45,13 @@ export async function generateFormattedID<T extends ModelName>(
     select: {
       [keyField]: true,
     },
-  }) as { [K in typeof keyField]?: string } | null;
+  });
 
   let nextNumber = 1;
 
-  if (lastRecord?.[keyField]) {
-    const match = lastRecord[keyField]!.match(/\d+$/);
+  const lastId = lastRecord?.[keyField];
+  if (lastId) {
+    const match = lastId.match(/\d+$/);
     if (match) {
       nextNumber = parseInt(match[0], 10) + 1;
     }
